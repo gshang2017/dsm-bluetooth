@@ -1,0 +1,38 @@
+name: dsm-bluetooth
+
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+
+jobs:
+  job1:
+    name: dsm-bluetooth-build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: bluetooth
+        run: |
+          cd /home/runner/work/dsm-bluetooth/dsm-bluetooth
+          sudo chmod +x dsm-bluetooth.sh
+          sudo ./dsm-bluetooth.sh
+          sudo tar -czvf dsm7.2-apollolake-bluetooth.tar.gz -C bluetooth-build modules/ bluetooth-modules.sh install.sh uninstall.sh
+          export ENABLE_RTL8761B_PATCH=true
+          sudo -E ./dsm-bluetooth.sh
+          sudo tar -czvf dsm7.2-apollolake-bluetooth-rtl8761b.tar.gz -C bluetooth-build modules/ firmware/ bluetooth-modules.sh install.sh uninstall.sh
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          body: |
+            dsm7.2-bluetooth
+          draft: false
+          prerelease: false
+          files: |
+            /home/runner/work/dsm-bluetooth/dsm-bluetooth/dsm7.2-apollolake-bluetooth.tar.gz
+            /home/runner/work/dsm-bluetooth/dsm-bluetooth/dsm7.2-apollolake-bluetooth-rtl8761b.tar.gz
